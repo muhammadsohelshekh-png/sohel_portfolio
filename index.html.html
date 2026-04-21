@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">   
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday!</title>
+    <style>
+        /* Basic Styles startt */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #000;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 4em;
+            font-family: 'Luckiest Guy', cursive;
+            color: white;
+            text-shadow: 0 0 10px #ff4500, 0 0 20px #ff4500, 0 0 30px #ff4500;
+            animation: glow 2s infinite alternate;
+            margin: 0;
+        }
+        .message {
+            font-size: 2em;
+            font-family: 'Dancing Script', cursive;
+            color: #ffd700;
+            margin: 20px 0;
+            opacity: 0;
+            animation: fadeIn 3s forwards;
+        }
+        .quote {
+            font-size: 1.5em;
+            font-family: 'Pacifico', cursive;
+            color: #00ff7f;
+            margin: 20px 0;
+            opacity: 0;
+            animation: fadeIn 3s forwards 1s;
+        }
+        button {
+            padding: 20px 40px;
+            font-size: 1.5em;
+            background: linear-gradient(45deg, #ff6347, #ff4500); /* Orange gradient */
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 50px;
+            margin-top: 40px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px #ff4500, 0 0 40px #ff4500;
+        }
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 300%;
+            height: 300%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.4), transparent);
+            transform: translate(-50%, -50%) scale(0);
+            transition: transform 0.5s ease;
+        }
+        button:active::before {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+
+        /* Animations startt */
+        @keyframes glow {
+            0% { text-shadow: 0 0 10px #ff6347, 0 0 20px #ff6347, 0 0 30px #ff6347; }
+            100% { text-shadow: 0 0 20px #ff4500, 0 0 30px #ff4500, 0 0 40px #ff4500; }
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+    </style>
+    <!-- Google Fonts startt -->
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+</head>
+<body>
+    <h1>Happy Birthday,<br><span id="userName" style="color: yellow !important;"> NAME! 🎉</span></h1>
+    <div class="message">🎂 "Saale mere se pehle mat mario" 🎈</div>
+    <div class="quote">saale too ye soch bhi kaise sakta hai ki mai bhool jaunga! 😊</div>
+    <button onclick="showMessage()">Special Surprise!</button>
+
+    <!-- Canvas for Fireworks -->
+    <canvas id="fireworks"></canvas>
+
+    <!-- Audio for Birthday Song -->
+    <audio id="birthdaySong" src="img/videoplayback%20(1).mp3" loop></audio>
+
+    <!-- Audio for Firecrackers Sound -->
+    <audio id="firecrackerSound" src="img/fireworks-close-29630.mp3.crdownload" loop></audio>
+
+    <script>
+        // Prompt user for their name and birthdate when the page loads
+        let userName = prompt("Please enter your name:");
+        let userAge = "";
+
+        if (userName) {
+            let birthdate = prompt("Please enter your birthdate (YYYY):");
+            if (birthdate) {
+                const today = new Date();
+                const birthDate = new Date(birthdate);
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+                userAge = age;
+            }
+            document.getElementById('userName').textContent = `${userName} (${userAge} years)! 🎉`;
+        } else {
+            document.getElementById('userName').textContent = `Friend! 🎉`;
+        }
+
+        // Play Firecracker Sound on Page Load
+        window.onload = function() {
+            playFirecrackerSound();
+        };
+
+        // Function to show alert message
+        function showMessage() {
+            const button = document.querySelector('button');
+            button.textContent = 'Surprise Loading...';
+            setTimeout(() => {
+                alert(`${userName || 'Friend'} (${userAge} years), Special Sound For Special frnd! ❤️`);
+                button.textContent = 'SPECIAL HAI TOO SAALE!';
+            }, 1000);
+            playBirthdaySong();
+            createBurstEffect();
+        }
+
+        // Fireworks Effect
+        const canvas = document.getElementById('fireworks');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let fireworks = [];
+        let particles = [];
+
+        class Firework {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height;
+                this.color = this.getRandomColor(); // Random color (Yellow, Red, or Blue)
+                this.velocity = {
+                    x: (Math.random() - 0.5) * 2,
+                    y: Math.random() * -3 - 4
+                };
+                this.alpha = 1;
+            }
+            getRandomColor() {
+                const colors = ['#FFD700', '#FF0000', '#0000FF']; // Yellow, Red, Blue
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+            update() {
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                this.alpha -= 0.01;
+                if (this.alpha <= 0) {
+                    this.explode();
+                    fireworks.splice(fireworks.indexOf(this), 1);
+                }
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.alpha;
+                ctx.fillRect(this.x, this.y, 5, 5);
+            }
+            explode() {
+                for (let i = 0; i < 100; i++) {
+                    particles.push(new Particle(this.x, this.y, this.color));
+                }
+            }
+        }
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.velocity = {
+                    x: (Math.random() - 0.5) * 10,
+                    y: (Math.random() - 0.5) * 10
+                };
+                this.alpha = 1;
+            }
+            update() {
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                this.alpha -= 0.01;
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.alpha;
+                ctx.fillRect(this.x, this.y, 2, 2);
+            }
+        }
+
+        function animateFireworks() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            fireworks.forEach((firework, index) => {
+                firework.update();
+                firework.draw();
+                if (firework.alpha <= 0) {
+                    fireworks.splice(index, 1);
+                }
+            });
+
+            particles.forEach((particle, index) => {
+                particle.update();
+                particle.draw();
+                if (particle.alpha <= 0) {
+                    particles.splice(index, 1);
+                }
+            });
+
+            // Increase fireworks frequency
+            if (Math.random() < 0.1) { // 10% chance of creating a new firework
+                fireworks.push(new Firework());
+            }
+
+            requestAnimationFrame(animateFireworks);
+        }
+
+        animateFireworks();
+
+        // Burst Effect on Button Click
+        function createBurstEffect() {
+            const button = document.querySelector('button');
+            const rect = button.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
+
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.style.position = 'absolute';
+                particle.style.left = `${x}px`;
+                particle.style.top = `${y}px`;
+                particle.style.width = '10px';
+                particle.style.height = '10px';
+                particle.style.backgroundColor = this.getRandomColor(); // Random color (Yellow, Red, or Blue)
+                particle.style.borderRadius = '50%';
+                particle.style.pointerEvents = 'none';
+                document.body.appendChild(particle);
+
+                const angle = Math.random() * 2 * Math.PI;
+                const speed = Math.random() * 10 + 5;
+                const vx = Math.cos(angle) * speed;
+                const vy = Math.sin(angle) * speed;
+
+                const animation = particle.animate([
+                    { transform: `translate(0, 0)`, opacity: 1 },
+                    { transform: `translate(${vx}px, ${vy}px)`, opacity: 0 }
+                ], {
+                    duration: 1000,
+                    easing: 'ease-out',
+                });
+
+                animation.onfinish = () => {
+                    particle.remove();
+                };
+            }
+        }
+
+        // Play Birthday Song
+        function playBirthdaySong() {
+            const audio = document.getElementById('birthdaySong');
+            audio.play();
+        }
+
+        // Play Firecracker Sound
+        function playFirecrackerSound() {
+            const audio = document.getElementById('firecrackerSound');
+            audio.play();
+        }
+    </script>
+</body>
+</html>
